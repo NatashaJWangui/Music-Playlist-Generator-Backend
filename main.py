@@ -9,10 +9,39 @@ from fastapi.middleware.cors import CORSMiddleware
 # Load environment variables from .env file
 load_dotenv()
 COHERE_API_KEY = os.getenv("COHERE_API_KEY")
-print("Loaded API Key:", COHERE_API_KEY)
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 
 if not COHERE_API_KEY:
     raise ValueError("COHERE_API_KEY is not set in the environment variables.")
+
+
+# Log the current environment
+if ENVIRONMENT == "production":
+    print("App is running in **PRODUCTION** mode")
+elif ENVIRONMENT == "development":
+    print("App is running in **DEVELOPMENT** mode")
+else:
+    print("⚠️ Environment is NOT set or unknown!")
+
+print("ENVIRONMENT:", ENVIRONMENT)  # Debugging log
+
+# Set the backend URL dynamically
+BASE_URL = os.getenv("MUSIC_PLAYLIST_BACKEND_DEV") if ENVIRONMENT == "development" else os.getenv("MUSIC_PLAYLIST_BACKEND")
+
+if not BASE_URL:
+    raise ValueError("MUSIC_PLAYLIST_BACKEND is not set in the environment variables.")
+
+# CORS Configuration: Allow different origins based on the environment
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "").split(",") if os.getenv("ALLOWED_ORIGINS") else [
+    "http://localhost:5173","https://music-playlist-generator.netlify.app" 
+]
+
+if ENVIRONMENT == "production":
+    allowed_origins = [
+        "https://music-playlist-generator-backend.onrender.com", 
+    ]
+
+print("CORS Allowed Origins:", allowed_origins)
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -20,7 +49,7 @@ app = FastAPI()
 # CORS policy to allow Vue frontend to access the API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
