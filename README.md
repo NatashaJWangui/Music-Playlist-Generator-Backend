@@ -112,7 +112,7 @@ The frontend is built with **Vue.js** and can be found here:
 ## Authors and Acknowledgment
 
 - **Natasha J Wangui**: Project creator and developer.
-- Special thanks to the Gridiron Bootcamp for providing this exercise.
+- Special thanks to the Gridiron Bootcamp - EGA Tech for providing this exercise.
 
 ## License
 
