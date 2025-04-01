@@ -109,6 +109,11 @@ The frontend is built with **Vue.js** and can be found here:
 - Add caching for better performance.
 - Expand genre support with more detailed recommendations.
 
+## Authors and Acknowledgment
+
+- **Natasha J Wangui**: Project creator and developer.
+- Special thanks to the Gridiron Bootcamp for providing this exercise.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
