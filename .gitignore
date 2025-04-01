@@ -1,0 +1,40 @@
+# Byte-compiled / cached files
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+*.pytest_cache/
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Dependencies
+*.log
+Pipfile
+Pipfile.lock
+
+# Environment variables / Secrets
+.env
+.env.local
+.env.*.backup
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Editor & IDE files
+.vscode/
+.idea/
+*.iml
+
+# Testing & coverage
+.coverage
+htmlcov/
+pytest_cache/
+*.cover
+
+# Ignore start script logs (if any)
+start_server.sh.log
+ 
