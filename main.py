@@ -4,6 +4,7 @@ import logging
 import os
 import requests
 import time
+import re
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict, List, Optional
@@ -86,11 +87,26 @@ async def check_rate_limit(request: Request):
         )
     return client_ip
 
-# Modified Song list function using Cohere to ensure randomness
+# Clean text helper function
+def clean_text(text):
+    # Remove extra quotes
+    text = text.replace('"', '').replace('"', '').replace('"', '')
+    # Remove any extraneous formatting
+    text = text.strip()
+    return text
+
+# Modified Song list function using Cohere to ensure randomness with improved parsing
 def generate_song_list(genre: str):
     # Adding randomness parameter to the prompt to get different results each time
     random_seed = random.randint(1, 10000)
-    prompt = f"Suggest 5 different {genre} songs with their artists. Make the selection diverse and unexpected. Use seed {random_seed} for randomness. Format: Song - Artist."
+    prompt = f"""Suggest 5 different {genre} songs with their artists. 
+    Make the selection diverse and unexpected. Use seed {random_seed} for randomness.
+    Format each line exactly like this: Song Title - Artist Name
+    Do not include album names, record labels, or any additional information.
+    Do not number the items.
+    Example format:
+    Bohemian Rhapsody - Queen
+    Imagine - John Lennon"""
     
     headers = {
         "Authorization": f"Bearer {COHERE_API_KEY}",
@@ -117,13 +133,36 @@ def generate_song_list(genre: str):
         playlist_text = response_json["text"].strip()
         playlist = []
         
+        # Log the raw response for debugging
+        logger.info(f"Raw response text: {playlist_text}")
+        
+        # Process each line in the response
         for line in playlist_text.split("\n"):
+            line = line.strip()
+            
+            # Skip empty lines
+            if not line:
+                continue
+            
+            # Remove any numbering at the beginning (like "1. " or "1) ")
+            line = re.sub(r'^\d+[\.\)]?\s*', '', line)
+            
+            # Try to split by " - " to separate title and artist
             if " - " in line:
-                # Skip any numbered items at the beginning (like "1. ")
-                if ". " in line[:3]:
-                    line = line[line.find(". ") + 2:]
-                title, artist = line.split(" - ", 1)
-                playlist.append({"title": title.strip(), "artist": artist.strip()})
+                parts = line.split(" - ", 1)
+                title = clean_text(parts[0])
+                artist = clean_text(parts[1])
+                
+                # Further clean up: ensure we're not keeping album names or record labels
+                # Most common pattern is artist name followed by album/label
+                if " " in artist and any(separator in artist for separator in [":", "-", "/"]):
+                    for separator in [":", "-", "/"]:
+                        if separator in artist:
+                            artist = artist.split(separator)[0].strip()
+                
+                # Only add if both title and artist are not empty
+                if title and artist:
+                    playlist.append({"title": title, "artist": artist})
         
         if not playlist:
             logger.warning("Empty playlist generated for genre: %s", genre)
@@ -135,11 +174,12 @@ def generate_song_list(genre: str):
             playlist = random.sample(playlist, 5)
         elif len(playlist) < 5:
             logger.warning(f"Less than 5 songs returned for genre: {genre}. Filling missing slots.")
-            placeholder_count = 5 - len(playlist)
-            for i in range(placeholder_count):
+            existing_count = len(playlist)
+            for i in range(5 - existing_count):
                 playlist.append({"title": f"Random {genre} Song", "artist": f"Artist {i+1}"})
         
         logger.info(f"Generated playlist for genre: {genre}")
+        logger.info(f"Final playlist: {playlist}")
         return playlist
     
     except Exception as e:
