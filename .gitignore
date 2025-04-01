@@ -1,5 +1,5 @@
 # Byte-compiled / cached files
-__pycache__/
+*__pycache__/
 *.py[cod]
 *.so
 *.egg-info/
