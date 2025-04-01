@@ -146,6 +146,9 @@ def generate_song_list(genre: str):
             
             # Remove any numbering at the beginning (like "1. " or "1) ")
             line = re.sub(r'^\d+[\.\)]?\s*', '', line)
+
+            # Add a second pass to catch multiple numbering patterns:
+            line = re.sub(r'^\d+[\.\)\:]?\s*', '', line)  # Run twice to catch nested numbering
             
             # Try to split by " - " to separate title and artist
             if " - " in line:
